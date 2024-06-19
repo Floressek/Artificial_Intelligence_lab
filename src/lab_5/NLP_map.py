@@ -6,6 +6,7 @@ from nltk.stem import WordNetLemmatizer
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import nltk
+import pdfplumber  # Importujemy pdfplumber do obsługi plików PDF
 
 # Download necessary nltk packages
 nltk.download('stopwords')
@@ -85,12 +86,17 @@ class WordCloudGenerator:
             index : int
                 the index of the file to load
         """
-
-        path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
+        filetypes = [("Text files", "*.txt"), ("PDF files", "*.pdf")]
+        path = filedialog.askopenfilename(filetypes=filetypes)
         if path:
             self.file_paths[index].set(path)
-            with open(path, 'r', encoding='utf-8') as file:
-                self.texts[index] = file.read()
+            if path.endswith('.pdf'):
+                with pdfplumber.open(path) as pdf:
+                    text = ' '.join(page.extract_text() for page in pdf.pages if page.extract_text())
+            else:
+                with open(path, 'r', encoding='utf-8') as file:
+                    text = file.read()
+            self.texts[index] = text
 
     def generate_word_clouds(self):
         """
@@ -122,7 +128,7 @@ class WordCloudGenerator:
                 the processed text
         """
 
-        custom_stop_words = {'w', 'np', 'naz', 'wym', 'z', 'na', 'o'}  # Custom stop words
+        custom_stop_words = {'w', 'np', 'naz', 'wym', 'z', 'na', 'o', 'co', 'oraz', 'nie', 'dla'}  # Custom stop words
         stop_words = set(stopwords.words('english')).union(custom_stop_words)
         lemmatizer = WordNetLemmatizer()
 
